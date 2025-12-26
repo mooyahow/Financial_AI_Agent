@@ -1,0 +1,9 @@
+.venv/
+*.pyc
+.env
+.env.local
+*.duckdb
+*.parquet
+__pycache__/
+.DS_Store
+.vscode/
