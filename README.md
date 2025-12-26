@@ -43,7 +43,7 @@ LLM_API_KEY=your_llm_api_key    # LLM 키
 LLM_MODEL=general-llm           # 사용 모델명
 LLM_BASE_URL=http://localhost:1234/v1  #  Base URL
 DB_PATH=data/all_stocks.duckdb  # DuckDB 파일 경로
-REDIS_URL=redis://localhost:6379/0
+REDIS_URL=redis://localhost:1234/0
 API_KEY_HEADER=Authorization
 ```
 
@@ -58,7 +58,7 @@ python python_exe.py --question "2024-10-14에 거래량이 전날대비 200% �
 # 또는 실행 후 프롬프트에서 질문 입력
 python python_exe.py
 # 한글 실행 파일(alias)
-python 실행.py
+python run_.py
 ```
 
 # FastAPI 서버 실행
