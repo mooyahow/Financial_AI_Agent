@@ -2,7 +2,7 @@
 
 고성능 주가 데이터(DuckDB + Parquet)와 LangChain ToolCallingAgent를 결합한 금융 분석 에이전트입니다.  
 FastAPI 기반 HTTP API와 로컬 CLI(`python_exe.py`) 두 가지 방식으로 질문에 답변합니다.
-(This repository reproduces the architecture (LangChain ToolCallingAgent + FastAPI) of my submission to the Mirae Asset Securities AI Festival, using publicly available yfinance data. The original submission is not publicly available due to competition data restrictions.)
+(대회 규정으로 원본 코드 비공개, 동일 아키텍처를 재현한 예제)
 
 ## 주요 기능
 - **LangChain ToolCallingAgent + AgentExecutor**: 질문 → 계획 → 도구 실행 → 응답 흐름 유지
