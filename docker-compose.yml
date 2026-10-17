@@ -1,0 +1,12 @@
+services:
+  agent:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      DB_PATH: /app/data/all_stocks.duckdb
+    volumes:
+      - ./data:/app/data:ro
+    restart: unless-stopped

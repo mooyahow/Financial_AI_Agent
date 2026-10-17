@@ -1,4 +1,4 @@
-# ** Financial AI Agent**
+# Financial AI Agent
 
 고성능 주가 데이터(DuckDB + Parquet)와 LangChain ToolCallingAgent를 결합한 금융 분석 에이전트입니다.  
 FastAPI 기반 HTTP API와 로컬 CLI(`python_exe.py`) 두 가지 방식으로 질문에 답변합니다.
@@ -23,10 +23,11 @@ FastAPI 기반 HTTP API와 로컬 CLI(`python_exe.py`) 두 가지 방식으로 �
 | `tools.py` | 20여 개 금융 분석 도구, 공휴일/영업일 보정 포함 |
 | `schemas.py` | LangChain tool 인자 검증용 `pydantic` 모델 |
 | `data_loader.py` | DuckDB에서 시세 데이터 로드 및 전처리 |
-| `api_server.py` | FastAPI HTTP 서버 (`/query`, `/status`) |
+| `api.py` | FastAPI HTTP 서버 (`/query`, `/status`) |
 | `python_exe.py` | 로컬 CLI 실행 스크립트 (API 없이 동작) |
 | `config.py` | 환경 변수 기반 설정 로더 및 프롬프트 템플릿 |
 | `requirements.txt` | 의존성 목록 |
+| `Dockerfile`, `docker-compose.yml` | 컨테이너 빌드·실행 설정 |
 | `.env.example` | 필요한 환경 변수 예시 |
 
 ## 사전 준비
@@ -62,9 +63,9 @@ python python_exe.py
 python run_.py
 ```
 
-# FastAPI 서버 실행
+## FastAPI 서버 실행
 ```bash
-uvicorn api_server:app --host 0.0.0.0 --port 8000
+uvicorn api:app --host 0.0.0.0 --port 8000
 ```
 
 ### 엔드포인트
@@ -88,10 +89,33 @@ curl -G "http://localhost:8000/query" \
   --data-urlencode "question=2024년 11월 22일에 KOSDAQ 시장에서 등락률이 +5% 이상인 종목은?"
 ```
 
+
+## Docker로 실행
+```bash
+cp .env.example .env            # 값 채우기
+mkdir -p data                   # DuckDB 파일을 data/ 아래에 둠
+docker compose up --build -d
+curl http://localhost:8000/status
+```
+- 데이터(DuckDB/Parquet)는 이미지에 넣지 않고 `./data`를 읽기 전용 볼륨으로 마운트
+- `.env`는 `env_file`로 주입, `.dockerignore`로 이미지에서 제외
+- `/status` 기반 HEALTHCHECK 포함
+
 ## 데이터 파이프라인 및 업데이트
 - **DuckDB → Parquet**: Parquet로 export하여 병렬 읽기 최적화 (예: `export_to_parquet.py`)
 - **일별 업데이트**: 크론탭 등으로 `update_stocks_db_m.py` 실행 후 Parquet 덮어쓰기
 - **조회 최적화**: `data_loader.py`가 DuckDB를 읽어 Pandas DataFrame으로 전처리
+
+
+## 대회 이후 보완한 부분
+대회 기간에는 평가셋 점수와 크레딧 한도 안에서 동작시키는 데 집중했기 때문에, 서버에 코드를 올리고 `uvicorn`을 직접 띄우는 수준이었습니다. 대회가 끝난 뒤 당시 부족했다고 느낀 부분을 아래와 같이 보완했습니다.
+
+- **컨테이너화**: `Dockerfile`·`docker-compose.yml` 추가. 데이터와 비밀값을 이미지에서 분리하고 헬스체크를 넣어 같은 환경에서 재현·배포 가능하도록 정리
+- **벤더 비종속 구성**: 대회에서는 특정 클라우드 LLM에 고정돼 있던 호출부를 OpenAI 호환 엔드포인트 설정(`LLM_BASE_URL`, `LLM_MODEL`)으로 일반화
+- **인증 정리**: HTTP API에 Bearer 토큰 인증을 넣고 미설정 시 명시적으로 503을 반환하도록 수정
+- **로컬 CLI**: 서버 없이 동일한 질의 흐름을 실행할 수 있는 `python_exe.py` 추가 (실패 분석 반복에 유용)
+
+아직 남아 있는 한계: 싱글턴 구조라 대화 맥락을 유지하지 못하고, LLM 선정은 샘플 질의 기반의 정성 비교에 그쳤습니다. 실서비스로 가려면 멀티턴 설계와 모델별 정량 평가 체계가 필요합니다.
 
 ## 설계 노트
 - **LLM 교체 용이성**: `config.py`와 환경 변수로 LLM 엔드포인트/모델을 설정하며, 특정 벤더명/키 포맷을 노출하지 않습니다.
